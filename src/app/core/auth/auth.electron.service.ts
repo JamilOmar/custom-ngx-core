@@ -34,6 +34,7 @@ export class AuthElectronService extends AuthBaseService implements Auth {
         this.authWindow.webContents.on('did-redirect-navigation', (event, url: string, isInPlace, isMainFrame, frameProcessId, frameRoutingId) => {
 
             if (this.authFlowType == AuthFlowType.auth) {
+                // validates  URL?code=.....
                 const validationString = `(${this.authConfig.redirectUrl}.*).*\?.*(\A?code=[^&]+&*)`;
                 const isValidUri = RegExp(validationString)
                 if (isValidUri.test(url)) {
@@ -41,6 +42,7 @@ export class AuthElectronService extends AuthBaseService implements Auth {
                     this.destroyAuthWin();
                 }
             } else {
+                // validates  URL?#id_token=.....
                 const validationString = `(${this.authConfig.redirectUrl}.*).*\?.*(\A?id_token=[^&]+&*)`;
                 const isValidUri = RegExp(validationString)
                 if (isValidUri.test(url)) {
