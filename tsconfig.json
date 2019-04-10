@@ -11,6 +11,14 @@
     "experimentalDecorators": true,
     "importHelpers": true,
     "target": "es5",
+    "paths": {
+      "@angular/*": [
+        "node_modules/@angular/*"
+      ],
+      "angular-auth-oidc-client": [
+        "node_modules/angular-auth-oidc-client/dist/angular-auth-oidc-client"
+      ]
+    },
     "typeRoots": [
       "node_modules/@types"
     ],

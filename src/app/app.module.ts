@@ -3,11 +3,13 @@ import { NgModule } from '@angular/core';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http'; 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { CONFIG } from './core';
+import { CONFIG, ConfigService, WindowService } from './core';
 import { TestComponent } from './test/test.component';
 import { environment } from '../environments/environment';
-import { OAuthModule } from 'angular-oauth2-oidc';
-import { AuthInterceptor } from './core/auth';
+import {
+  AuthModule, OidcSecurityService, OidcConfigService,
+} from 'angular-auth-oidc-client';
+import { AuthInterceptor, AuthBaseService, AuthFactory } from './core/auth';
 @NgModule({
   declarations: [
     AppComponent,
@@ -17,10 +19,13 @@ import { AuthInterceptor } from './core/auth';
     BrowserModule,
     AppRoutingModule,
     HttpClientModule,
-    OAuthModule.forRoot()
+    AuthModule.forRoot()
   ],
-  providers: [  { provide:CONFIG , useValue: environment },
-    {provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true},],
+  providers: [ 
+    { provide: AuthBaseService,  useFactory: AuthFactory,
+      deps: [OidcSecurityService,OidcConfigService,ConfigService, WindowService]},
+    { provide:CONFIG , useValue: environment },
+   ],
   
   bootstrap: [AppComponent]
 })

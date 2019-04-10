@@ -28,7 +28,7 @@ export class GoogleService {
           return this.httpClient.post(
               url,
               item
-          );
+          ).subscribe();
       }
   }
 }

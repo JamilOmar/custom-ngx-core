@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ConfigService, AuthService } from '../core';
-
+import { ConfigService, AuthWebService, AuthBaseService } from '../core';
 @Component({
   selector: 'app-test',
   templateUrl: './test.component.html',
@@ -8,12 +7,11 @@ import { ConfigService, AuthService } from '../core';
 })
 export class TestComponent implements OnInit {
 
-  constructor(private nxgCoreConfig: ConfigService , private authService : AuthService) { }
+  constructor(private nxgCoreConfig: ConfigService , private authService : AuthBaseService) { }
 
   ngOnInit() {
-
-    console.log(this.nxgCoreConfig.get('test'));
     this.authService.configure(this.nxgCoreConfig.get('auth'));
+    this.authService.onAuthCallback();
   }
 
   onLogin() {
@@ -30,6 +28,10 @@ export class TestComponent implements OnInit {
 
       console.log(data);
     });
+  }
+  onGetBrowsers():boolean{
+    return false;
+
   }
 
 }

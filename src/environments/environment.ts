@@ -4,6 +4,7 @@
 
 export const environment = {
   production: false,
+  appType : 'web',
   test :12,
   auth: {
     url: "http://localhost:7000/_api",

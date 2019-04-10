@@ -25,7 +25,7 @@ export class UsageService {
           return this.httpClient.post(
               url,
               item
-          );
+          ).subscribe();
       }
   }
 }

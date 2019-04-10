@@ -1,4 +1,5 @@
 
-export * from './browser.utils';
-export * from './url.utils';
+export * from './browser.service';
+export * from './url.service';
+export * from './window.service';
 
