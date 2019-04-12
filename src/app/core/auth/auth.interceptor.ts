@@ -4,12 +4,12 @@ import {
 } from '@angular/common/http';
 import * as _ from 'lodash';
 import { Observable } from 'rxjs';
-import { AuthBaseService } from './auth.base.service';
+import { AuthService } from './auth.base.service';
 
 /** Pass untouched request through to the next request handler. */
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
-  constructor(private authService: AuthBaseService) {
+  constructor(private authService: AuthService) {
   }
   intercept(req: HttpRequest<any>, next: HttpHandler):
     Observable<HttpEvent<any>> {

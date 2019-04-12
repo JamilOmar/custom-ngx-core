@@ -3,13 +3,13 @@ import { ConfigService } from '../config';
 import { OidcSecurityService, OidcConfigService } from 'angular-auth-oidc-client';
 import * as _ from 'lodash';
 import { Auth, AuthFlowType, AuthConfig } from './auth.types';
-import { AuthBaseService } from './auth.base.service';
+import { AuthService } from './auth.base.service';
 import { WindowService } from '../utils/window.service';
 
 @Injectable({
     providedIn: 'root'
 })
-export class AuthElectronService extends AuthBaseService implements Auth {
+export class AuthElectronService extends AuthService implements Auth {
     private authWindow;
     constructor(public client: OidcSecurityService, public oidcConfigService: OidcConfigService,
         public configService: ConfigService, public window: WindowService) {
@@ -39,7 +39,7 @@ export class AuthElectronService extends AuthBaseService implements Auth {
                 const isValidUri = RegExp(validationString)
                 if (isValidUri.test(url)) {
                     this.onAuthCodeCallbackLogic(url);
-                    this.destroyAuthWin();
+                    //this.destroyAuthWin();
                 }
             } else {
                 // validates  URL?#id_token=.....
@@ -48,7 +48,7 @@ export class AuthElectronService extends AuthBaseService implements Auth {
                 if (isValidUri.test(url)) {
                     const indexOfHash = url.indexOf('#');
                     this.onAuthImplicitCallbackLogic(url.substring(indexOfHash).substr(1));
-                    this.destroyAuthWin();
+                    //this.destroyAuthWin();
                 }
 
             }

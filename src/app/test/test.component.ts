@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ConfigService, AuthWebService, AuthBaseService } from '../core';
+import { ConfigService, AuthWebService, AuthService } from '../core';
 @Component({
   selector: 'app-test',
   templateUrl: './test.component.html',
@@ -7,16 +7,21 @@ import { ConfigService, AuthWebService, AuthBaseService } from '../core';
 })
 export class TestComponent implements OnInit {
 
-  constructor(private nxgCoreConfig: ConfigService , private authService : AuthBaseService) { }
+  constructor(private nxgCoreConfig: ConfigService , private authService : AuthService) { }
 
   ngOnInit() {
-    this.authService.configure(this.nxgCoreConfig.get('auth'));
+    this.authService.configure(this.nxgCoreConfig.get('auth')).subscribe();
     this.authService.onAuthCallback();
   }
 
   onLogin() {
    this.authService.login();
   }
+
+  onRefreshToken(){
+    this.authService.refreshToken('0dBtv912eQzZJMqO385_7RAIwZj').subscribe((c)=> console.log(c));
+  }
+
   onLogout(){
     this.authService.logout();
   }

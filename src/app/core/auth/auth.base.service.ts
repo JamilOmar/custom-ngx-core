@@ -2,14 +2,14 @@ import { Injectable } from '@angular/core';
 import { ConfigService } from '../config';
 import { OidcSecurityService, OidcConfigService, OpenIDImplicitFlowConfiguration, AuthWellKnownEndpoints } from 'angular-auth-oidc-client';
 import * as _ from 'lodash';
-import { filter, take } from 'rxjs/operators';
+import { filter, take, map } from 'rxjs/operators';
 import { AuthConfig, Auth, AuthFlowType } from './auth.types';
 import { WindowService } from '../utils/window.service';
 
 @Injectable({
   providedIn: 'root'
 })
-export abstract class AuthBaseService implements Auth {
+export abstract class AuthService implements Auth {
   protected authConfig: AuthConfig;
   protected authFlowType: AuthFlowType;
   constructor(public client: OidcSecurityService, public oidcConfigService: OidcConfigService,
@@ -26,8 +26,8 @@ export abstract class AuthBaseService implements Auth {
     this.client.authorizedImplicitFlowCallback(hash);
   }
 
-  public refreshToken(refreshToken: string): void {
-    throw new Error("Method not implemented.");
+  public refreshToken(refreshToken: string) {
+    return this.client.requestTokensWithRefreshToken(refreshToken);
   }
   /**
    *@description check if login successfully after login by checking value of `authInfo`
@@ -56,28 +56,30 @@ export abstract class AuthBaseService implements Auth {
   }
 
   public configure(config?: AuthConfig) {
+    debugger
     this.authConfig = _.defaultsDeep(this.authConfig, config);
     let stsServer = `${this.authConfig.url}/auth/${this.authConfig.organization || 'ls'}`;
-    this.oidcConfigService.load_using_stsServer(stsServer);
-    this.oidcConfigService.onConfigurationLoaded.subscribe(() => {
-      const openIDImplicitFlowConfiguration = new OpenIDImplicitFlowConfiguration();
-      openIDImplicitFlowConfiguration.stsServer = stsServer;
-      openIDImplicitFlowConfiguration.redirect_url = _.get(this.authConfig, 'redirectUrl', this.window.nativeWindow.location.origin);
-      openIDImplicitFlowConfiguration.unauthorized_route = ''; // TODO: add in config
-      openIDImplicitFlowConfiguration.forbidden_route = ''; // TODO: add in config
-      openIDImplicitFlowConfiguration.client_id = this.authConfig.clientId;
-      openIDImplicitFlowConfiguration.client_secret = this.authConfig.clientSecret;
-      openIDImplicitFlowConfiguration.response_type = this.responseType;
-      openIDImplicitFlowConfiguration.scope = _.get(this.authConfig, 'scope', 'openid profile offline_access ');; // default scope 
-      const authWellKnownEndpoints = new AuthWellKnownEndpoints();
-      authWellKnownEndpoints.setWellKnownEndpoints(this.oidcConfigService.wellKnownEndpoints);
-      this.client.setupModule(
-        openIDImplicitFlowConfiguration,
-        authWellKnownEndpoints
-      );
-
-    });
+    return this.oidcConfigService.load_well_known_endpoints(stsServer).pipe(
+      map((endPoints)=>{
+        const openIDImplicitFlowConfiguration = new OpenIDImplicitFlowConfiguration();
+        openIDImplicitFlowConfiguration.stsServer = stsServer;
+        openIDImplicitFlowConfiguration.redirect_url = _.get(this.authConfig, 'redirectUrl', this.window.nativeWindow.location.origin);
+        openIDImplicitFlowConfiguration.unauthorized_route = ''; // TODO: add in config
+        openIDImplicitFlowConfiguration.forbidden_route = ''; // TODO: add in config
+        openIDImplicitFlowConfiguration.client_id = this.authConfig.clientId;
+        openIDImplicitFlowConfiguration.client_secret = this.authConfig.clientSecret;
+        openIDImplicitFlowConfiguration.response_type = this.responseType;
+        openIDImplicitFlowConfiguration.scope = _.get(this.authConfig, 'scope', 'openid profile offline_access ');; // default scope 
+        const authWellKnownEndpoints = new AuthWellKnownEndpoints();
+        authWellKnownEndpoints.setWellKnownEndpoints(endPoints);
+        return this.client.setupModule(
+          openIDImplicitFlowConfiguration,
+          authWellKnownEndpoints
+        );
+      })
+    )
   }
+  
 
 
   get responseType(): string {

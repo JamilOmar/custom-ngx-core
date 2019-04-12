@@ -9,7 +9,7 @@ import { environment } from '../environments/environment';
 import {
   AuthModule, OidcSecurityService, OidcConfigService,
 } from 'angular-auth-oidc-client';
-import { AuthInterceptor, AuthBaseService, AuthFactory } from './core/auth';
+import { AuthInterceptor, AuthService, AuthFactory } from './core/auth';
 @NgModule({
   declarations: [
     AppComponent,
@@ -22,7 +22,7 @@ import { AuthInterceptor, AuthBaseService, AuthFactory } from './core/auth';
     AuthModule.forRoot()
   ],
   providers: [ 
-    { provide: AuthBaseService,  useFactory: AuthFactory,
+    { provide: AuthService,  useFactory: AuthFactory,
       deps: [OidcSecurityService,OidcConfigService,ConfigService, WindowService]},
     { provide:CONFIG , useValue: environment },
    ],
