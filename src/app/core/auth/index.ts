@@ -1,5 +1,6 @@
 export * from './auth.keys';
 export * from './auth.factory';
+export * from './auth.service';
 export * from './auth.base.service';
 export * from './auth.web.service';
 export * from './auth.electron.service';

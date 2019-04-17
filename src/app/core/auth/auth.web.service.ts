@@ -1,27 +1,33 @@
 import { Injectable } from '@angular/core';
-import { AuthService } from './auth.base.service';
+import { AuthBaseService } from './auth.base.service';
 import { OidcSecurityService, OidcConfigService } from 'angular-auth-oidc-client';
 import { ConfigService } from '../config';
-import { AuthFlowType, Auth, AuthConfig } from './auth.types';
+import { AuthFlowType, AuthConfig } from './auth.types';
 import { WindowService } from '../utils/window.service';
 import { filter, take } from 'rxjs/operators';
 import * as _ from 'lodash';
-@Injectable({
-  providedIn: 'root'
-})
-export class AuthWebService extends AuthService implements Auth {
+
+/**
+  * AuthWebService Service
+  *@description: Provides the main functionality for web app authentication
+  */
+@Injectable()
+export class AuthWebService extends AuthBaseService {
   constructor(public client: OidcSecurityService, public oidcConfigService: OidcConfigService,
     public configService: ConfigService, public window: WindowService) {
-    super(client, oidcConfigService, configService, window)
-    this.authFlowType = AuthFlowType.auth;
+    super(client, oidcConfigService, configService, window);
+    // implicit flow by default
+    this.authFlowType = this.authConfig.authFlowType || AuthFlowType.implicit;
   }
+  // this must be at the constructor
   public onAuthCallback(url?: string) {
-    if (this.authFlowType == AuthFlowType.auth) {
+    // when the page loads it will perform the callback for the defined authentication method
+    if (this.authFlowType == AuthFlowType.code) {
       if (this.client.moduleSetup) {
-        this.onAuthCodeCallbackLogic(window.location.toString());
+        this.onAuthCodeCallbackLogic(this.uiRouterPatch(this.window.nativeWindow.location.toString()));
       } else {
         this.client.onModuleSetup.subscribe(() => {
-          this.onAuthCodeCallbackLogic(window.location.toString());
+          this.onAuthCodeCallbackLogic(this.uiRouterPatch(this.window.nativeWindow.location.toString()));
         });
       }
 
@@ -30,7 +36,9 @@ export class AuthWebService extends AuthService implements Auth {
         filter((isModuleSetup: boolean) => isModuleSetup),
         take(1)
       ).subscribe((isModuleSetup: boolean) => {
-        this.onAuthImplicitCallbackLogic();
+        if (this.window.nativeWindow.location.hash !== '') {
+          this.onAuthImplicitCallbackLogic(this.window.nativeWindow.location.hash.substr(1));
+        }
       });
     }
   }

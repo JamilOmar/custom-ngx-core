@@ -1,15 +1,10 @@
 import { AuthConfig } from '../auth/auth.types';
+import { AnalyticsConfig } from '../analytics';
+import { UsageConfig } from '../usage';
 
-export interface UsageConfig {
-  url: string;
-}
-
-export interface AnalyticsConfig {
-  url: string
-}
 
 export interface Config {
-  auth: AuthConfig;
+  auth?: AuthConfig;
   usage?: UsageConfig;
   analytics?: AnalyticsConfig;
   [key: string]: any;

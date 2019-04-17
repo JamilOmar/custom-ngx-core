@@ -19,7 +19,7 @@ export class TestComponent implements OnInit {
   }
 
   onRefreshToken(){
-    this.authService.refreshToken('0dBtv912eQzZJMqO385_7RAIwZj').subscribe((c)=> console.log(c));
+    this.authService.requestWithRefreshToken('0dBtv912eQzZJMqO385_7RAIwZj').subscribe((c)=> console.log(c));
   }
 
   onLogout(){

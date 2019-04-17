@@ -2,22 +2,26 @@ import { Injectable } from '@angular/core';
 import { ConfigService } from '../config';
 import { OidcSecurityService, OidcConfigService } from 'angular-auth-oidc-client';
 import * as _ from 'lodash';
-import { Auth, AuthFlowType, AuthConfig } from './auth.types';
-import { AuthService } from './auth.base.service';
+import { AuthFlowType } from './auth.types';
+import { AuthBaseService } from './auth.base.service';
 import { WindowService } from '../utils/window.service';
-
-@Injectable({
-    providedIn: 'root'
-})
-export class AuthElectronService extends AuthService implements Auth {
+import { AuthKeys } from './auth.keys';
+ /**
+   * AuthElectronService Service
+   *@description: Provides the main functionality for authentication with electron
+   */
+@Injectable()
+export class AuthElectronService extends AuthBaseService {
     private authWindow;
     constructor(public client: OidcSecurityService, public oidcConfigService: OidcConfigService,
         public configService: ConfigService, public window: WindowService) {
         super(client, oidcConfigService, configService, window)
-        this.authFlowType = AuthFlowType.auth;
-        _.get(this.authConfig, 'redirectUrl', 'http://localhost:4200');
+          // auth flow by default
+          this.authFlowType =    this.authConfig.authFlowType || AuthFlowType.code;
+          this.authConfig.redirectUrl =  this.authConfig.redirectUrl ||AuthKeys.ELECTRON_DEFAULT_REDIRECT_URL;
     }
     public login() {
+        // creates a new popup window for authentication
         const BrowserWindow = this.window.nativeWindow.require('electron').remote.BrowserWindow;
         this.authWindow = new BrowserWindow({
             title: 'Login',
@@ -33,13 +37,13 @@ export class AuthElectronService extends AuthService implements Auth {
         }, false);
         this.authWindow.webContents.on('did-redirect-navigation', (event, url: string, isInPlace, isMainFrame, frameProcessId, frameRoutingId) => {
 
-            if (this.authFlowType == AuthFlowType.auth) {
+            if (this.authFlowType == AuthFlowType.code) {
                 // validates  URL?code=.....
                 const validationString = `(${this.authConfig.redirectUrl}.*).*\?.*(\A?code=[^&]+&*)`;
                 const isValidUri = RegExp(validationString)
                 if (isValidUri.test(url)) {
-                    this.onAuthCodeCallbackLogic(url);
-                    //this.destroyAuthWin();
+                    this.onAuthCodeCallbackLogic(this.uiRouterPatch(url));
+                    this.destroyAuthWin();
                 }
             } else {
                 // validates  URL?#id_token=.....
@@ -48,7 +52,7 @@ export class AuthElectronService extends AuthService implements Auth {
                 if (isValidUri.test(url)) {
                     const indexOfHash = url.indexOf('#');
                     this.onAuthImplicitCallbackLogic(url.substring(indexOfHash).substr(1));
-                    //this.destroyAuthWin();
+                    this.destroyAuthWin();
                 }
 
             }
@@ -60,11 +64,11 @@ export class AuthElectronService extends AuthService implements Auth {
             }
         });
         super.login(this.authWindow.loadURL);
-        this.authWindow.openDevTools();
         this.authWindow.show();
     }
     public onAuthCallback(url?: string) {
     }
+    // destroys the popup window
     private destroyAuthWin(): void {
         if (!this.authWindow) return;
         this.authWindow.close();

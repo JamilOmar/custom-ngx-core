@@ -1,26 +1,53 @@
 import { Injectable } from '@angular/core';
 import {
-  HttpEvent, HttpInterceptor, HttpHandler, HttpRequest
+  HttpInterceptor, HttpHandler, HttpRequest, HttpEvent
 } from '@angular/common/http';
 import * as _ from 'lodash';
-import { Observable } from 'rxjs';
-import { AuthService } from './auth.base.service';
+import { Observable, throwError } from 'rxjs';
+import { AuthService } from './auth.service';
+import { catchError, take, switchMap, filter, mergeMap } from 'rxjs/operators';
+import { AuthFlowType } from './auth.types';
 
-/** Pass untouched request through to the next request handler. */
+/**
+  * AuthInterceptor
+  *@description: Basic Auth Interceptor
+  */
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
   constructor(private authService: AuthService) {
   }
   intercept(req: HttpRequest<any>, next: HttpHandler):
     Observable<HttpEvent<any>> {
+    const request = this.addAuthenticationToken(req);
+    return next.handle(request).pipe(
+      catchError(error => {
+        // If error status is different than 401 we want to skip refresh token
+        // So we check that and throw the error if it's the case
+        if (error.status !== 401) {
+          this.authService.handleError(error);
+          return throwError(error);
+        }
+        if (this.authService.authFlowType === AuthFlowType.code) {
+          const token = this.authService.getRefreshToken();
+          return this.authService.requestWithRefreshToken(token).pipe(mergeMap(() => {
+            return next.handle(this.addAuthenticationToken(request));
+          }), catchError((err) => { this.authService.handleError(err); return throwError(err); })) as Observable<HttpEvent<any>>;
+        }
+        this.authService.handleError(error);
+        return throwError(error);
+      })
+
+
+    )
+  }
+  // add header token
+  private addAuthenticationToken(req) {
     const token = this.authService.getAccessToken();
-    if (!_.isEmpty(token)) {
-      const header = `Bearer ${this.authService.getAccessToken()}`;
-      const headers = req.headers.set('Authorization', header);
-      const transformedReq = req.clone({ headers });
-      return next.handle(transformedReq);
-    } else {
-      return next.handle(req);
+    if (!token) {
+      return req;
     }
+    const header = `Bearer ${token}`;
+    const headers = req.headers.set('Authorization', header);
+    return req.clone({ headers });
   }
 }

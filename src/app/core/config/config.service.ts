@@ -4,9 +4,7 @@ import defaults from './default.config.service';
 import * as _ from 'lodash';
 import { ConfigKeys } from './config.keys';
 export const CONFIG= new InjectionToken<any>(ConfigKeys.CONFIG_TOKEN);
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable()
 export class ConfigService {
 
   private config:Config;
@@ -40,6 +38,16 @@ export class ConfigService {
    */
   public get(key: string , defaultValue?: any): any {
       return _.get(this.config, key, defaultValue);
+  }
+
+  /**
+   * @description Validates if the property exists in the LabShare configuration
+   * @example
+   * NgxCoreConfig.has('myKey') => true
+   * @returns {IConfig}
+   */
+  public has(key: string): boolean {
+      return _.has(this.config, key);
   }
 
   public load(configuration? : Config){
